@@ -1,0 +1,49 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "lint": "biome check src",
+    "format": "biome format src",
+    "lint:fix": "biome check src --fix --unsafe",
+    "prisma-generate": "npx prisma generate --schema=./prisma/schema.prisma"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.4.1",
+  "dependencies": {
+    "@fastify/cors": "10.0.1",
+    "@fastify/jwt": "9.0.1",
+    "@fastify/swagger-ui": "5.2.0",
+    "@prisma/client": "6.0.1",
+    "@types/bcryptjs": "2.4.6",
+    "axios": "1.7.9",
+    "bcryptjs": "2.4.3",
+    "dotenv": "16.4.7",
+    "fastify": "^5.2.1",
+    "fastify-plugin": "^5.0.1",
+    "fastify-raw-body": "5.0.0",
+    "fastify-type-provider-zod": "^4.0.2",
+    "module-alias": "2.2.3",
+    "tsup": "8.3.5"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@fastify/swagger": "^9.4.0",
+    "@types/node": "^22.13.4",
+    "dayjs": "1.11.13",
+    "prisma": "6.0.1",
+    "supertest": "7.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "zod": "^3.24.1"
+  },
+  "_moduleAliases": {
+    "@": "src"
+  }
+}
