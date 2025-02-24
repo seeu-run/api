@@ -1,5 +1,3 @@
-// schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -56,7 +54,6 @@ model User {
   invites            Invite[]
   member_on          Member[]
   owns_organizations Organization[]
-  VPS                VPS[]
 
   @@map("users")
 }
@@ -130,29 +127,124 @@ model Organization {
   owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId String @map("owner_id")
 
-  invites Invite[]
-  members Member[]
+  invites        Invite[]
+  members        Member[]
+  ServiceMonitor ServiceMonitor[]
+  Integration    Integration[]
 
   @@index([slug])
   @@map("organizations")
 }
 
-enum MetricType {
-  CPU
-  MEMORY
-  DISK
-  NETWORK
+enum ServiceType {
+  VPS
+  DOMAIN
+  API
+  TYPEBOT
+  VSL
 }
 
-model VPS {
-  id          String   @id @default(uuid())
-  userId      String
-  ipAddress   String
-  accessKey   String
-  sshKey      String
-  sshPassword String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+enum ServiceStatusType {
+  UP
+  DOWN
+  DEGRADED
+  UNKNOWN
+}
 
-  user User @relation(fields: [userId], references: [id])
+enum NotificationType {
+  EMAIL
+  SMS
+  WHATSAPP
+  TELEGRAM
+  SLACK
+  WEBHOOK
+}
+
+enum IntegrationProvider {
+  FACEBOOK
+  TIKTOK
+  GOOGLE_ADS
+}
+
+enum CampaignStatus {
+  ACTIVE
+  PAUSED
+  STOPPED
+}
+
+model ServiceMonitor {
+  id             String       @id @default(uuid())
+  name           String
+  type           ServiceType
+  url            String?      @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  ipAddress   String? @map("ip_address")
+  sshUser     String? @map("ssh_user")
+  sshPassword String? @map("ssh_password")
+  sshKey      String? @map("ssh_key")
+
+  statuses      ServiceStatus[]
+  notifications Notification[]
+
+  @@map("service_monitors")
+}
+
+model ServiceStatus {
+  id        String            @id @default(uuid())
+  service   ServiceMonitor    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId String            @map("service_id")
+  status    ServiceStatusType
+  checkedAt DateTime          @default(now()) @map("checked_at")
+
+  @@index([serviceId, checkedAt])
+  @@map("service_statuses")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  recipient String
+  message   String
+  sentAt    DateTime?        @map("sent_at")
+
+  service   ServiceMonitor? @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId String?         @map("service_id")
+
+  campaign   Campaign? @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId String?   @map("campaign_id")
+
+  @@map("notifications")
+}
+
+model Integration {
+  id             String              @id @default(uuid())
+  provider       IntegrationProvider
+  apiKey         String
+  organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String              @map("organization_id")
+  createdAt      DateTime            @default(now()) @map("created_at")
+
+  campaigns Campaign[]
+
+  @@unique([provider, organizationId])
+  @@map("integrations")
+}
+
+model Campaign {
+  id            String              @id @default(uuid())
+  name          String
+  provider      IntegrationProvider
+  integration   Integration         @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  integrationId String              @map("integration_id")
+  status        CampaignStatus      @default(ACTIVE)
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+
+  notifications Notification[]
+
+  @@map("campaigns")
 }
