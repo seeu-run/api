@@ -13,7 +13,7 @@ export async function deleteMonitoring(app: FastifyInstance) {
     '/monitoring/:monitorId',
     {
       schema: {
-        tags: ['monitoring'],
+        tags: ['Monitoring'],
         summary: 'Delete a monitor',
         params: z.object({
           monitorId: z.string().uuid(),

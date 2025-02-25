@@ -17,7 +17,7 @@ export async function getMonitors(app: FastifyInstance) {
       '/organizations/:slug/monitors',
       {
         schema: {
-          tags: ['monitoring'],
+          tags: ['Monitoring'],
           summary: 'Get all organization monitors',
           security: [{ bearerAuth: [] }],
           params: z.object({

@@ -12,7 +12,7 @@ export async function getMonitoring(app: FastifyInstance) {
     '/monitoring/:monitorId',
     {
         schema: {
-          tags: ['monitoring'],
+          tags: ['Monitoring'],
           summary: 'Get a monitor',
           params: z.object({
             monitorId: z.string().uuid(),
