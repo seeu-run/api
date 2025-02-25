@@ -21,7 +21,7 @@ export async function createMonitoring(app: FastifyInstance) {
           security: [{ bearerAuth: [] }],
           body: z.object({
             name: z.string(),
-            type: z.nativeEnum(ServiceType),
+            type: z.nativeEnum(ServiceType).default('VPS'),
           }),
           params: z.object({
             slug: z.string(),
