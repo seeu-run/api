@@ -26,6 +26,11 @@ import { getMembership } from './routes/orgs/get-membership'
 
 import { requestPasswordRecover } from './routes/auth/request-password-recover'
 import { resetPassword } from './routes/auth/reset-password'
+import { createMonitoring } from './routes/monitoring/create-monitoring'
+import { deleteMonitoring } from './routes/monitoring/delete-monitor'
+import { getMonitoring } from './routes/monitoring/get-monitoring'
+import { getMonitors } from './routes/monitoring/get-monitors'
+import { updateMonitoring } from './routes/monitoring/update-monitor'
 
 export const app = fastify().withTypeProvider<ZodTypeProvider>()
 
@@ -81,6 +86,13 @@ app.register(transferOrganization)
 app.register(updateOrganization)
 app.register(getMembership)
 
+
+// Monitoring
+app.register(createMonitoring)
+app.register(deleteMonitoring)
+app.register(getMonitoring)
+app.register(getMonitors)
+app.register(updateMonitoring)
 
 // Invites
 // app.register(acceptInvite)
