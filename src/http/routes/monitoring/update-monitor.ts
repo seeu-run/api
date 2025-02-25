@@ -24,7 +24,7 @@ export async function updateMonitoring(app: FastifyInstance) {
           }),
           body: z.object({
             name: z.string().optional(),
-            type: z.nativeEnum(ServiceType).optional(),
+            type: z.nativeEnum(ServiceType).default('VPS'),
             url: z.string().nullable().optional(),
             ipAddress: z.string().nullable().optional(),
             sshUser: z.string().nullable().optional(),
