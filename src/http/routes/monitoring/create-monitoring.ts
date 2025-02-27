@@ -22,6 +22,11 @@ export async function createMonitoring(app: FastifyInstance) {
           body: z.object({
             name: z.string(),
             type: z.nativeEnum(ServiceType).default('VPS'),
+            url: z.string().nullable(),
+            ipAddress: z.string().nullable(),
+            sshUser: z.string().nullable().default('root'),
+            sshPassword: z.string().nullable(),
+            sshKey: z.string().nullable(),
           }),
           params: z.object({
             slug: z.string(),
@@ -37,15 +42,20 @@ export async function createMonitoring(app: FastifyInstance) {
         const { slug } = request.params
         const userId = await request.getCurrentUserId()
         const { organization } = await request.getUserMembership(slug)
-
-        const {name, type} = request.body
-
         await ensureIsAdminOrOwner(userId, organization.id)
+
+        const {name, type, url, ipAddress, sshKey, sshPassword, sshUser} = request.body
+
 
         const monitor = await prisma.serviceMonitor.create({
             data: {
-                name: name,
-                type: type,
+                name,
+                type,
+                url,
+                ipAddress,
+                sshKey,
+                sshPassword,
+                sshUser,
                 organizationId: organization.id
             }
         })
