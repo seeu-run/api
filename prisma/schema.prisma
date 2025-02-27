@@ -20,12 +20,6 @@ enum AccountProvider {
   GOOGLE
 }
 
-enum SubscriptionType {
-  FREE
-  BASIC
-  PRO
-}
-
 enum TokenType {
   PASSWORD_RECOVER
 }
@@ -131,9 +125,82 @@ model Organization {
   members        Member[]
   ServiceMonitor ServiceMonitor[]
   Integration    Integration[]
+  Subscription   Subscription[]
 
   @@index([slug])
   @@map("organizations")
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELED
+}
+
+enum SubscriptionType {
+  FREE
+  PRO
+  BUSINESS
+}
+
+model SubscriptionPlan {
+  id               String           @id @default(uuid())
+  name             String           @unique
+  type             SubscriptionType @unique
+  price            Decimal          @default(0.00)
+  currency         String           @default("BRL")
+  maxServices      Int              @default(1) // Free = 1, Pro = 5, Business = 15
+  checkInterval    Int              @default(30) // Free = 30 min, Pro = 10 min, Business = 2 min
+  notifications    String[]         @default(["EMAIL"]) // Free só pode email
+  hasSSHMonitoring Boolean          @default(false) // Free sem SSH
+  hasWebhooks      Boolean          @default(false) // Free sem webhook
+  logRetentionDays Int              @default(1) // Free = 12h, Pro = 7 dias, Business = 30 dias
+
+  subscriptions Subscription[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id             String       @id @default(uuid())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id")
+
+  plan   SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planId String           @map("plan_id")
+
+  status    PaymentStatus @default(PENDING)
+  expiresAt DateTime?
+  startedAt DateTime      @default(now()) @map("started_at")
+
+  payments Payment[] // Relacionamento com transações de pagamento
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("subscriptions")
+}
+
+model Payment {
+  id             String       @id @default(uuid())
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  subscriptionId String       @map("subscription_id")
+
+  amount        Decimal // Valor pago
+  currency      String        @default("BRL")
+  status        PaymentStatus @default(PENDING)
+  transactionId String? // ID da transação no Stripe/Pagar.me/etc.
+  provider      String // Qual gateway foi usado (ex: "Stripe", "Pagar.me")
+  paidAt        DateTime?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("payments")
 }
 
 enum ServiceType {
@@ -173,22 +240,24 @@ enum CampaignStatus {
 }
 
 model ServiceMonitor {
-  id             String       @id @default(uuid())
-  name           String
-  type           ServiceType
-  url            String?      @unique
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId String       @map("organization_id")
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
+  id   String      @id @default(uuid())
+  name String
+  type ServiceType
+  url  String?     @unique
 
   ipAddress   String? @map("ip_address")
   sshUser     String? @map("ssh_user")
   sshPassword String? @map("ssh_password")
   sshKey      String? @map("ssh_key")
 
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   statuses      ServiceStatus[]
   notifications Notification[]
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id")
 
   @@map("service_monitors")
 }

@@ -31,7 +31,17 @@ import { deleteMonitoring } from './routes/monitoring/delete-monitor'
 import { getMonitoring } from './routes/monitoring/get-monitoring'
 import { getMonitors } from './routes/monitoring/get-monitors'
 import { updateMonitoring } from './routes/monitoring/update-monitor'
-import { mockTestRoute } from './routes/mock/mock-route'
+import { getMembers } from './routes/members/get-members'
+import { removeMember } from './routes/members/remove-member'
+import { updateMember } from './routes/members/update-member'
+import { getOrganizationBilling } from './routes/billing/get-organization-billing'
+import { acceptInvite } from './routes/invites/accept-invite'
+import { createInvite } from './routes/invites/create-invites'
+import { getInvite } from './routes/invites/get-invite'
+import { getInvites } from './routes/invites/get-invites'
+import { getPendingInvites } from './routes/invites/get-pending-invites'
+import { rejectInvite } from './routes/invites/reject-invite'
+import { revokeInvite } from './routes/invites/revoke-invite'
 
 export const app = fastify().withTypeProvider<ZodTypeProvider>()
 
@@ -99,18 +109,18 @@ app.register(updateMonitoring)
 app.register(mockTestRoute)
 
 // Invites
-// app.register(acceptInvite)
-// app.register(createInvite)
-// app.register(getInvite)
-// app.register(getInvites)
-// app.register(getPendingInvites)
-// app.register(rejectInvite)
-// app.register(revokeInvite)
+app.register(acceptInvite)
+app.register(createInvite)
+app.register(getInvite)
+app.register(getInvites)
+app.register(getPendingInvites)
+app.register(rejectInvite)
+app.register(revokeInvite)
 
 // Members
-// app.register(getMembers)
-// app.register(removeMember)
-// app.register(updateMember)
+app.register(getMembers)
+app.register(removeMember)
+app.register(updateMember)
 
 // Billing
-// app.register(getOrganizationBilling)
+app.register(getOrganizationBilling)

@@ -5,13 +5,16 @@ CREATE TYPE "Role" AS ENUM ('OWNER', 'ADMIN', 'MEMBER', 'CUSTOMER', 'BILLING');
 CREATE TYPE "AccountProvider" AS ENUM ('GITHUB', 'GOOGLE');
 
 -- CreateEnum
-CREATE TYPE "SubscriptionType" AS ENUM ('FREE', 'BASIC', 'PRO');
-
--- CreateEnum
 CREATE TYPE "TokenType" AS ENUM ('PASSWORD_RECOVER');
 
 -- CreateEnum
 CREATE TYPE "TransactionStatus" AS ENUM ('PENDING', 'SUCCESS', 'FAILED');
+
+-- CreateEnum
+CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'SUCCESS', 'FAILED', 'CANCELED');
+
+-- CreateEnum
+CREATE TYPE "SubscriptionType" AS ENUM ('FREE', 'PRO', 'BUSINESS');
 
 -- CreateEnum
 CREATE TYPE "ServiceType" AS ENUM ('VPS', 'DOMAIN', 'API', 'TYPEBOT', 'VSL');
@@ -100,6 +103,55 @@ CREATE TABLE "organizations" (
     "owner_id" TEXT NOT NULL,
 
     CONSTRAINT "organizations_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "subscription_plans" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "type" "SubscriptionType" NOT NULL,
+    "price" DECIMAL(65,30) NOT NULL DEFAULT 0.00,
+    "currency" TEXT NOT NULL DEFAULT 'BRL',
+    "maxServices" INTEGER NOT NULL DEFAULT 1,
+    "checkInterval" INTEGER NOT NULL DEFAULT 30,
+    "notifications" TEXT[] DEFAULT ARRAY['EMAIL']::TEXT[],
+    "hasSSHMonitoring" BOOLEAN NOT NULL DEFAULT false,
+    "hasWebhooks" BOOLEAN NOT NULL DEFAULT false,
+    "logRetentionDays" INTEGER NOT NULL DEFAULT 1,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "subscription_plans_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "subscriptions" (
+    "id" TEXT NOT NULL,
+    "organization_id" TEXT NOT NULL,
+    "plan_id" TEXT NOT NULL,
+    "status" "PaymentStatus" NOT NULL DEFAULT 'PENDING',
+    "expiresAt" TIMESTAMP(3),
+    "started_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "subscriptions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "payments" (
+    "id" TEXT NOT NULL,
+    "subscription_id" TEXT NOT NULL,
+    "amount" DECIMAL(65,30) NOT NULL,
+    "currency" TEXT NOT NULL DEFAULT 'BRL',
+    "status" "PaymentStatus" NOT NULL DEFAULT 'PENDING',
+    "transactionId" TEXT,
+    "provider" TEXT NOT NULL,
+    "paidAt" TIMESTAMP(3),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "payments_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -194,6 +246,12 @@ CREATE UNIQUE INDEX "organizations_domain_key" ON "organizations"("domain");
 CREATE INDEX "organizations_slug_idx" ON "organizations"("slug");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "subscription_plans_name_key" ON "subscription_plans"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "subscription_plans_type_key" ON "subscription_plans"("type");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "service_monitors_url_key" ON "service_monitors"("url");
 
 -- CreateIndex
@@ -222,6 +280,15 @@ ALTER TABLE "members" ADD CONSTRAINT "members_user_id_fkey" FOREIGN KEY ("user_i
 
 -- AddForeignKey
 ALTER TABLE "organizations" ADD CONSTRAINT "organizations_owner_id_fkey" FOREIGN KEY ("owner_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "subscriptions" ADD CONSTRAINT "subscriptions_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "subscriptions" ADD CONSTRAINT "subscriptions_plan_id_fkey" FOREIGN KEY ("plan_id") REFERENCES "subscription_plans"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "payments" ADD CONSTRAINT "payments_subscription_id_fkey" FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "service_monitors" ADD CONSTRAINT "service_monitors_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
