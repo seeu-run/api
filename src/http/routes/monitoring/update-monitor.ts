@@ -23,13 +23,13 @@ export async function updateMonitoring(app: FastifyInstance) {
             monitorId: z.string().uuid(),
           }),
           body: z.object({
-            name: z.string().optional(),
-            type: z.nativeEnum(ServiceType).default('VPS'),
-            url: z.string().nullable().nullable(),
-            ipAddress: z.string().nullable().nullable(),
-            sshUser: z.string().nullable().nullable(),
-            sshPassword: z.string().nullable().nullable(),
-            sshKey: z.string().nullable().nullable(),
+            name: z.string(),
+            type: z.nativeEnum(ServiceType),
+            url: z.string().nullable(),
+            ipAddress: z.string().nullable(),
+            sshUser: z.string().nullable(),
+            sshPassword: z.string().nullable(),
+            sshKey: z.string().nullable(),
           }),
           response: {
             200: z.object({

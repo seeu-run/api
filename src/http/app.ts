@@ -31,6 +31,7 @@ import { deleteMonitoring } from './routes/monitoring/delete-monitor'
 import { getMonitoring } from './routes/monitoring/get-monitoring'
 import { getMonitors } from './routes/monitoring/get-monitors'
 import { updateMonitoring } from './routes/monitoring/update-monitor'
+import { mockTestRoute } from './routes/mock/mock-route'
 
 export const app = fastify().withTypeProvider<ZodTypeProvider>()
 
@@ -93,6 +94,9 @@ app.register(deleteMonitoring)
 app.register(getMonitoring)
 app.register(getMonitors)
 app.register(updateMonitoring)
+
+
+app.register(mockTestRoute)
 
 // Invites
 // app.register(acceptInvite)
