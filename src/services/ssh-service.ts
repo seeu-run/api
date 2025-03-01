@@ -1,4 +1,5 @@
 import { Client, ConnectConfig, ExecOptions, ClientChannel } from 'ssh2'
+import { RedisService } from './redis-service'
 
 export class SSHService {
   private conn: Client | null = null
@@ -22,29 +23,41 @@ export class SSHService {
     })
   }
 
-  async execute(command: string): Promise<void> {
+  async execute(command: string, redisService: RedisService, redisKey: string): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.conn || !this.isConnected) {
         reject('Erro: Nenhuma conexão SSH ativa.')
         return
       }
-
+  
       const execOptions: ExecOptions = {}
       this.conn.exec(command, execOptions, (err: Error | undefined, stream: ClientChannel) => {
         if (err) {
           reject(`Erro ao executar comando: ${err.message}`)
           return
         }
-
-        stream.on('data', (data: Buffer) => {
-          console.log(`stdout: ${data.toString()}`)
+  
+        let output = ''
+  
+        stream.on('data', async (data: Buffer) => {
+          const chunk = data.toString()
+          console.log(`stdout: ${chunk}`)
+          output += chunk
         })
-
-        stream.on('close', (code: number, signal: string | null) => {
+  
+        stream.on('close', async (code: number, signal: string | null) => {
           console.log(`Comando finalizado com código ${code}, sinal ${signal}`)
+  
+          try {
+            await redisService.set(redisKey, output)
+            console.log(`Saída salva no Redis com a chave: ${redisKey}`)
+          } catch (error) {
+            console.error('Erro ao salvar no Redis:', error)
+          }
+  
           resolve()
         })
-
+  
         stream.on('error', (err: Error) => {
           reject(`Erro no stream: ${err.message}`)
         })
@@ -58,8 +71,6 @@ export class SSHService {
       this.isConnected = false
       this.conn = null
       console.log('Sessão SSH desconectada.')
-    } else {
-      console.log('Nenhuma conexão ativa para desconectar.')
     }
   }
 }

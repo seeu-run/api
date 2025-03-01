@@ -105,6 +105,9 @@ app.register(getMonitoring)
 app.register(getMonitors)
 app.register(updateMonitoring)
 
+
+app.register(mockTestRoute)
+
 // Invites
 app.register(acceptInvite)
 app.register(createInvite)

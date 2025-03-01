@@ -1,0 +1,65 @@
+// Instalar o strings
+
+if ! dpkg -l | grep -q binutils; then
+    echo "Binutils não encontrado. Instalando..."
+    apt-get update && apt-get install -y binutils
+else
+    echo "Binutils já está instalado."
+fi
+
+// Capturar auth AUTH_KEY
+
+strings /etc/easypanel/data/data.mdb | head -n 50 | grep -oP '"id":"\K[a-zA-Z0-9]+' | head -n 1
+
+// Curl pra pegar o system stats
+
+curl 'https://<HOST_IP>/api/trpc/monitor.getSystemStats?input=%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%7D%7D' \
+  -H 'accept: */*' \
+  -H 'accept-language: pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7' \
+  -H 'authorization: <AUTH_KEY>' \
+  -H 'content-type: application/json' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://<HOST_IP>/' \
+  -H 'sec-ch-ua: "Not(A:Brand";v="99", "Google Chrome";v="133", "Chromium";v="133"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36' \
+  --insecure
+
+// Caso a máquina não tenha easypanel
+
+echo '{
+    "result": {
+        "data": {
+        "json": {
+            "uptime": '$(awk '{print $1}' /proc/uptime)',
+            "memInfo": {
+            "totalMemMb": '$(free -m | awk '/Mem:/ {print $2}')',
+            "usedMemMb": '$(free -m | awk '/Mem:/ {print $3}')',
+            "freeMemMb": '$(free -m | awk '/Mem:/ {print $4}')',
+            "usedMemPercentage": '$(free | awk '/Mem:/ {printf "%.2f", $3/$2 * 100}')',
+            "freeMemPercentage": '$(free | awk '/Mem:/ {printf "%.2f", $4/$2 * 100}')'
+            },
+            "diskInfo": {
+            "totalGb": "'$(df -h / | awk 'NR==2 {print $2}' | sed 's/G//')'",
+            "usedGb": "'$(df -h / | awk 'NR==2 {print $3}' | sed 's/G//')'",
+            "freeGb": "'$(df -h / | awk 'NR==2 {print $4}' | sed 's/G//')'",
+            "usedPercentage": "'$(df -h / | awk 'NR==2 {print $5}' | sed 's/%//')'",
+            "freePercentage": "'$(awk 'BEGIN {printf "%.1f", 100 - ('$(df / | awk 'NR==2 {print $5}' | sed 's/%//')') }')'"
+            },
+            "cpuInfo": {
+            "usedPercentage": '$(top -bn1 | grep '%Cpu' | awk '{print 100 - $8}')',
+            "count": '$(nproc)',
+            "loadavg": ['$(awk '{print $1","$2","$3}' /proc/loadavg)']
+            },
+            "network": {
+            "inputMb": '$(awk '{print $2/1024/1024}' /proc/net/dev | tail -n +3 | paste -sd+ - | bc)',
+            "outputMb": '$(awk '{print $10/1024/1024}' /proc/net/dev | tail -n +3 | paste -sd+ - | bc)'
+            }
+        }
+        }
+    }
+}'
