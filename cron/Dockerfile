@@ -1,10 +1,13 @@
-FROM node:22.8.0-slim
+FROM node:23-slim
 
-USER node
+WORKDIR /app
 
-WORKDIR /home/node/app
+RUN npm install -g pnpm
 
-COPY package.*json .
+COPY package*.json ./
+
 RUN pnpm install
 
-CMD [ "pnpm", "run", "start" ]
+COPY . .
+
+ENTRYPOINT [ "pnpm", "run", "dev" ]

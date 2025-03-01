@@ -1,4 +1,4 @@
-FROM node:21-alpine
+FROM node:23-slim
 
 WORKDIR /app
 
@@ -10,4 +10,4 @@ RUN pnpm install
 
 COPY . .
 
-ENTRYPOINT [ "pnpm", "run", "start" ]
+ENTRYPOINT [ "pnpm", "run", "dev" ]
