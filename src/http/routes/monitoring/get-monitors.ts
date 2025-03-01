@@ -5,7 +5,6 @@ import { z } from 'zod'
 import { auth } from '@/http/middlewares/auth'
 import { prisma } from '@/lib/prisma'
 
-import { roleSchema } from '../orgs/get-organizations'
 import { ensureIsAdminOrOwner } from '@/utils/permissions'
 import { ServiceStatusType, ServiceType } from '@prisma/client'
 
@@ -47,6 +46,14 @@ export async function getMonitors(app: FastifyInstance) {
                   ),
                 })
               ),
+              meta: z.object({
+                totalMonitors: z.number(),
+                serviceUp: z.number(),
+                activeAlerts: z.object({
+                  critical: z.number(),
+                  warning: z.number()
+                })
+              })
             }),
           },
         },
@@ -58,6 +65,8 @@ export async function getMonitors(app: FastifyInstance) {
 
         await ensureIsAdminOrOwner(userId, organization.id)
         
+        const totalMonitors = await prisma.serviceMonitor.count({ where: { organizationId: organization.id } })
+
         const monitors = await prisma.serviceMonitor.findMany({
             where: {
               organizationId: organization.id,
@@ -83,8 +92,15 @@ export async function getMonitors(app: FastifyInstance) {
               },
             },
           })
-  
-          return { monitors }
+
+          return { monitors, meta: {
+            totalMonitors,
+            serviceUp: 0,
+            activeAlerts: {
+              critical: 0,
+              warning: 0
+            }
+          } }
       },
     )
 }

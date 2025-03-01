@@ -339,3 +339,4 @@ enum LogLevel {
   DEBUG
   CRITICAL
 }
+

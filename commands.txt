@@ -55,9 +55,9 @@ echo '{
             "count": '$(nproc)',
             "loadavg": ['$(awk '{print $1","$2","$3}' /proc/loadavg)']
             },
-            "network": {
-            "inputMb": '$(awk '{print $2/1024/1024}' /proc/net/dev | tail -n +3 | paste -sd+ - | bc)',
-            "outputMb": '$(awk '{print $10/1024/1024}' /proc/net/dev | tail -n +3 | paste -sd+ - | bc)'
+            "network": { 
+            "inputMb": '$(awk '!/lo/ {print $2/1024/1024}' /proc/net/dev | tail -n +3 | paste -sd+ - | bc)',
+            "outputMb": '$(awk '!/lo/ {print $10/1024/1024}' /proc/net/dev | tail -n +3 | paste -sd+ - | bc)'
             }
         }
         }

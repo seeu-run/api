@@ -12,6 +12,6 @@ export default defineConfig({
   shims: true,
   dts: true, // Gera arquivos de definição de tipos (.d.ts)
   esbuildOptions(options) {
-    options.resolveExtensions = ['.ts', '.js']
+    options.resolveExtensions = ['.ts', '.js'];
   },
-})
+});

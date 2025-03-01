@@ -1,9 +1,9 @@
 import "dotenv/config";
 import { Buffer } from "buffer";
 import { ConnectionOptions, Queue } from "bullmq";
-import { ILogService } from "@/services/interfaces/log-service.interface";
 import { MonitorJobData, IQueueService } from "@/services/interfaces/queue-service.interface";
 import { ConnectConfig } from "ssh2";
+import { ILogService } from "./interfaces/log-service.interface";
 
 
 export class QueueService implements IQueueService {
@@ -42,6 +42,10 @@ export class QueueService implements IQueueService {
                 organizationId,
                 monitorId
             }
+        }, {
+            attempts: 3,
+            removeOnComplete: true,
+            removeOnFail: true
         })
 
         this.logService.create(`📌 Job adicionado: ${job.id} para monitor: ${ipAddress}`, "INFO", organizationId);
