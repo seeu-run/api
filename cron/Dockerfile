@@ -1,8 +1,8 @@
 FROM node:23-slim
 
-RUN npm install -g pnpm
-
 WORKDIR /app
+
+RUN npm install -g pnpm
 
 COPY package*.json ./
 

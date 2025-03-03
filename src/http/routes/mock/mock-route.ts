@@ -5,11 +5,9 @@ import z from 'zod'
 
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/http/middlewares/auth'
-import { BadRequestError } from '@/http/_errors/bad-request-error'
-import { CreateContainer } from '@/usecases/create-container'
 import { RedisService } from '@/services/redis-service'
-import { SSHService } from '@/services/ssh-service'
 import { ensureIsAdminOrOwner } from '@/utils/permissions'
+import { LogService } from '@/services/log-service'
 
 export async function mockTestRoute(app: FastifyInstance) {
   app
@@ -38,11 +36,8 @@ export async function mockTestRoute(app: FastifyInstance) {
         const { organization } = await request.getUserMembership(slug)
         await ensureIsAdminOrOwner(userId, organization.id)
 
-        const sshService = new SSHService()
+        const logService = new LogService()
         const redisService = new RedisService()
-        const idk = new CreateContainer(sshService, redisService)
-
-        idk.create(monitorId)
 
         return reply.send()
       },
