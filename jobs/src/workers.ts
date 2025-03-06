@@ -27,7 +27,7 @@ const systemMonitoringProcessor = async (job: Job) => {
     await globalUseCases.systemMonitoringUseCase.execute(job.data.message, organizationId, monitorId)
 }
 
-const systemMonitoringWorkers = createWorker("system-monitoring", systemMonitoringProcessor, 5)
+const systemMonitoringWorkers = createWorker("system-monitoring", systemMonitoringProcessor, 1)
 
 systemMonitoringWorkers.forEach((worker) => {
     worker.on("completed", (job) => {

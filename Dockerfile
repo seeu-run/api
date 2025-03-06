@@ -10,4 +10,4 @@ RUN pnpm install
 
 COPY . .
 
-ENTRYPOINT [ "pnpm", "run", "dev" ]
+ENTRYPOINT [ "/start.sh" ]
