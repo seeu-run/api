@@ -1,6 +1,18 @@
 services:
-  server-1:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    
+  postgres:
+    image: bitnami/postgresql:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: seeu-run
+    ports:
+      - "5433:5432"
+
+  redis:
+    image: bitnami/redis:latest
+    environment:
+      REDIS_USERNAME: "default"
+      REDIS_PASSWORD: "admin"
+      ALLOW_EMPTY_PASSWORD: "no"
+    ports:
+      - "6379:6379"

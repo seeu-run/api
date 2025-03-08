@@ -7,7 +7,8 @@ export class RedisService implements IRedisService {
   private redis: RedisClient
 
   constructor() {
-    this.redis = new Redis(env.REDIS_URL)
+    const redisUrl = `redis://${env.REDIS_USERNAME}:${env.REDIS_PASSWORD}@${env.REDIS_HOST}:${env.REDIS_PORT}`;
+    this.redis = new Redis(redisUrl)
   }
 
   async set(key: string, value: string, expiration: number = 300): Promise<string> {
