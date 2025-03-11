@@ -13,6 +13,6 @@ export class LogService implements ILogService {
             }
         })
 
-        console.log(`(${log.timestamp}) | ${level} - ${message}`);
+        console.log(`(${log.timestamp}) | ${level} - ${message}`)
     }
 }

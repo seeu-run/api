@@ -7,7 +7,7 @@ export class RedisService implements IRedisService {
   private redis: RedisClient
 
   constructor() {
-    const redisUrl = `redis://${env.REDIS_USERNAME}:${env.REDIS_PASSWORD}@${env.REDIS_HOST}:${env.REDIS_PORT}`;
+    const redisUrl = `redis://${env.REDIS_USERNAME}:${env.REDIS_PASSWORD}@${env.REDIS_HOST}:${env.REDIS_PORT}`
     this.redis = new Redis(redisUrl)
   }
 
