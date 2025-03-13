@@ -1,6 +1,12 @@
 import { manageWorkers } from "@/jobs/workers/worker-manager";
 import { vpsCheckerProcessor } from "@/jobs/processors/vps-checker-processor";
 
-manageWorkers("vps-monitoring", vpsCheckerProcessor)
+let isJobsStarted = false;
 
-console.log("🚀 Listener iniciado...")
+export function startJobs() {
+    if (isJobsStarted) return;
+    isJobsStarted = true;
+
+    manageWorkers("vps-monitoring", vpsCheckerProcessor);
+    console.log("🚀 Listener iniciado...");
+}

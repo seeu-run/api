@@ -1,29 +1,39 @@
-import {SshService} from "@/services/ssh-service"
-import {VpsMonitorDto} from "@/cron/usecases/vps-monitor"
-import {prisma} from "@/lib/prisma";
+import type { SshService } from "@/services/ssh-service";
+import type { VpsMonitorDto } from "@/cron/usecases/vps-monitor";
+import type { ServiceStatus } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { RedisService } from "@/services/redis-service";
+
+const redisService = new RedisService();
 
 export class VpsChecker {
-    private readonly sshService: SshService
-
+    private readonly sshService: SshService;
 
     constructor(sshService: SshService) {
-        this.sshService = sshService
+        this.sshService = sshService;
     }
 
     async execute(data: VpsMonitorDto) {
         const monitor = await prisma.serviceMonitor.findUnique({
-            where: {id: data.monitorId},
-            include: {
-                statuses: true
-            }
-        })
+            where: { id: data.monitorId },
+            include: { statuses: true },
+        });
 
         if (!monitor) {
-            throw new Error('Monitor not founded')
+            throw new Error("Monitor not found");
+        }
+
+        const cacheKey = `vps-monitor:${data.monitorId}`;
+        const cachedResult = await redisService.get(cacheKey);
+
+        // ✅ Se o estado não mudou, evitamos reprocessamento
+        if (cachedResult && cachedResult === JSON.stringify(data)) {
+            console.log(`⚡ Skipping SSH execution for ${data.monitorId}, data unchanged`);
+            return;
         }
 
         try {
-            await this.sshService.connect(data.vpsCredentials)
+            await this.sshService.connect(data.vpsCredentials);
 
             const command = `
                 echo '{
@@ -64,28 +74,31 @@ export class VpsChecker {
                         }
                     }
                 }'
-            `
+            `;
 
+            await this.sshService.execute(command, data.monitorId, data.vpsCredentials);
 
-            await this.sshService.execute(command, data.monitorId, data.vpsCredentials)
+            // ✅ Atualiza o cache com os novos dados para evitar execuções repetidas
+            await redisService.set(cacheKey, JSON.stringify(data), 300); // Expira em 5 minutos
 
             await Promise.all(
-                monitor.statuses.map(async (status) => {
+                monitor.statuses.map(async (status: ServiceStatus) => {
                     await prisma.serviceStatus.update({
                         where: { id: status.id },
                         data: { status: "UP" },
-                    })
+                    });
                 })
-            )
+            );
         } catch (e) {
+            console.error(`❌ SSH execution failed for ${data.monitorId}:`, e);
             await Promise.all(
-                monitor.statuses.map(async (status) => {
+                monitor.statuses.map(async (status: ServiceStatus) => {
                     await prisma.serviceStatus.update({
                         where: { id: status.id },
                         data: { status: "DOWN" },
-                    })
+                    });
                 })
-            )
+            );
         }
     }
 }
