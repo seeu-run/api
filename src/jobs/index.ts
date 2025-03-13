@@ -3,5 +3,4 @@ import { vpsCheckerProcessor } from "@/jobs/processors/vps-checker-processor";
 
 manageWorkers("vps-monitoring", vpsCheckerProcessor)
 
-
 console.log("🚀 Listener iniciado...")

@@ -5,6 +5,7 @@ export async function getVpsMonitors() {
     const vpsMonitorsToCheck = await prisma.serviceMonitor.findMany({
         where: {
             type: "VPS",
+
         },
         include: {
             organization: {
