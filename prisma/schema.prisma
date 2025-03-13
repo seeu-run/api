@@ -31,17 +31,15 @@ enum TransactionStatus {
 }
 
 model User {
-  id           String           @id @default(uuid())
+  id           String    @id @default(uuid())
   name         String?
-  email        String           @unique
-  passwordHash String?          @map("password_hash")
-  avatarUrl    String?          @map("avatar_url")
+  email        String    @unique
+  passwordHash String?   @map("password_hash")
+  avatarUrl    String?   @map("avatar_url")
   birthday     DateTime?
-  subscription SubscriptionType @default(FREE)
 
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
-  preferredGateway String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   tokens             Token[]
   accounts           Account[]
@@ -140,15 +138,16 @@ enum PaymentStatus {
 }
 
 enum SubscriptionType {
-  FREE
+  TRIAL
   PRO
   BUSINESS
+  BETA
 }
 
 model SubscriptionPlan {
   id               String           @id @default(uuid())
   name             String           @unique
-  type             SubscriptionType @unique
+  type             SubscriptionType @unique @default(BETA)
   price            Decimal          @default(0.00)
   currency         String           @default("BRL")
   maxServices      Int              @default(1) // Free = 1, Pro = 5, Business = 15

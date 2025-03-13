@@ -65,6 +65,24 @@ export async function createOrganization(app: FastifyInstance) {
           },
         })
 
+        const plan = await prisma.subscriptionPlan.findFirst({
+          where: {
+            type: "BETA"
+          }
+        })
+
+        if (!plan) {
+          throw new Error("Plan not founded")
+        }
+
+        await prisma.subscription.create({
+          data: {
+            organizationId: organization.id,
+            planId: plan.id,
+            status: "SUCCESS"
+          }
+        })
+
         return reply.status(201).send({
           organizationId: organization.id,
         })

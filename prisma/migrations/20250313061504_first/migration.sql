@@ -14,7 +14,7 @@ CREATE TYPE "TransactionStatus" AS ENUM ('PENDING', 'SUCCESS', 'FAILED');
 CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'SUCCESS', 'FAILED', 'CANCELED');
 
 -- CreateEnum
-CREATE TYPE "SubscriptionType" AS ENUM ('FREE', 'PRO', 'BUSINESS');
+CREATE TYPE "SubscriptionType" AS ENUM ('TRIAL', 'PRO', 'BUSINESS', 'BETA');
 
 -- CreateEnum
 CREATE TYPE "ServiceType" AS ENUM ('VPS', 'DOMAIN', 'API', 'TYPEBOT', 'VSL');
@@ -31,6 +31,9 @@ CREATE TYPE "IntegrationProvider" AS ENUM ('FACEBOOK', 'TIKTOK', 'GOOGLE_ADS');
 -- CreateEnum
 CREATE TYPE "CampaignStatus" AS ENUM ('ACTIVE', 'PAUSED', 'STOPPED');
 
+-- CreateEnum
+CREATE TYPE "LogLevel" AS ENUM ('INFO', 'WARNING', 'ERROR', 'DEBUG', 'CRITICAL');
+
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
@@ -39,10 +42,8 @@ CREATE TABLE "users" (
     "password_hash" TEXT,
     "avatar_url" TEXT,
     "birthday" TIMESTAMP(3),
-    "subscription" "SubscriptionType" NOT NULL DEFAULT 'FREE',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "preferredGateway" TEXT,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
@@ -109,7 +110,7 @@ CREATE TABLE "organizations" (
 CREATE TABLE "subscription_plans" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "type" "SubscriptionType" NOT NULL,
+    "type" "SubscriptionType" NOT NULL DEFAULT 'BETA',
     "price" DECIMAL(65,30) NOT NULL DEFAULT 0.00,
     "currency" TEXT NOT NULL DEFAULT 'BRL',
     "maxServices" INTEGER NOT NULL DEFAULT 1,
@@ -160,13 +161,13 @@ CREATE TABLE "service_monitors" (
     "name" TEXT NOT NULL,
     "type" "ServiceType" NOT NULL,
     "url" TEXT,
-    "organization_id" TEXT NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
     "ip_address" TEXT,
     "ssh_user" TEXT,
     "ssh_password" TEXT,
     "ssh_key" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "organization_id" TEXT NOT NULL,
 
     CONSTRAINT "service_monitors_pkey" PRIMARY KEY ("id")
 );
@@ -218,6 +219,17 @@ CREATE TABLE "campaigns" (
     CONSTRAINT "campaigns_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "logs" (
+    "id" TEXT NOT NULL,
+    "timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "level" "LogLevel" NOT NULL,
+    "message" TEXT NOT NULL,
+    "organization_id" TEXT,
+
+    CONSTRAINT "logs_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
@@ -259,6 +271,9 @@ CREATE INDEX "service_statuses_service_id_checked_at_idx" ON "service_statuses"(
 
 -- CreateIndex
 CREATE UNIQUE INDEX "integrations_provider_organization_id_key" ON "integrations"("provider", "organization_id");
+
+-- CreateIndex
+CREATE INDEX "logs_level_timestamp_idx" ON "logs"("level", "timestamp");
 
 -- AddForeignKey
 ALTER TABLE "tokens" ADD CONSTRAINT "tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -307,3 +322,6 @@ ALTER TABLE "integrations" ADD CONSTRAINT "integrations_organization_id_fkey" FO
 
 -- AddForeignKey
 ALTER TABLE "campaigns" ADD CONSTRAINT "campaigns_integration_id_fkey" FOREIGN KEY ("integration_id") REFERENCES "integrations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "logs" ADD CONSTRAINT "logs_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE SET NULL ON UPDATE CASCADE;
