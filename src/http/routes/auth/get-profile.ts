@@ -36,17 +36,34 @@ export async function getProfile(app: FastifyInstance) {
         const userId = await request.getCurrentUserId()
 
         const user = await prisma.user.findUnique({
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            subscription: true,
-            avatarUrl: true,
-          },
-          where: {
-            id: userId,
-          },
-        })
+            where: {
+              id: userId,
+            },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatarUrl: true,
+              owns_organizations: {
+                select: {
+                  Subscription: {
+                    select: {
+                      status: true,
+                      expiresAt: true,
+                      startedAt: true,
+                      plan: {
+                        select: {
+                          type: true,
+                          name: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          })
+
 
         if (!user) {
           throw new BadRequestError('User not found.')
