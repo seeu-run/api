@@ -1,13 +1,20 @@
 FROM node:23-slim
 
-RUN npm install -g pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+RUN apt-get update && apt-get install -y openssl libssl3
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml ./
 
 RUN pnpm install
 
 COPY . .
 
-ENTRYPOINT [ "/start.sh" ]
+RUN pnpm run build
+
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+ENTRYPOINT ["/start.sh"]

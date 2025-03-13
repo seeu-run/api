@@ -1,4 +1,7 @@
-pnpm run build
+#!/bin/sh
+set -e
+
 pnpx prisma migrate deploy
 pnpx prisma generate
-pnpm run start
+
+exec pnpm run start
