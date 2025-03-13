@@ -66,6 +66,7 @@ export class VpsChecker {
                 }'
             `
 
+
             await this.sshService.execute(command, data.monitorId, data.vpsCredentials)
 
             await Promise.all(
