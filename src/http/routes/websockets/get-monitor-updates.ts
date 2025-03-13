@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { RedisService } from "@/services/redis-service";
 
-export async function getMonitorUpdates(app: FastifyInstance) {
+export async function getMonitorUpdatesWs(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().get(
     "/ws/monitors",
     {
