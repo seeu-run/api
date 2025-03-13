@@ -43,6 +43,8 @@ import { getInvites } from './routes/invites/get-invites'
 import { getPendingInvites } from './routes/invites/get-pending-invites'
 import { rejectInvite } from './routes/invites/reject-invite'
 import { revokeInvite } from './routes/invites/revoke-invite'
+import fastifyWebsocket from '@fastify/websocket'
+import { getMonitorUpdatesWs } from './routes/websockets/get-monitor-updates'
 
 export const app = fastify().withTypeProvider<ZodTypeProvider>()
 
@@ -80,6 +82,7 @@ app.register(fastifySwaggerUi, {
 app.setSerializerCompiler(serializerCompiler)
 app.setValidatorCompiler(validatorCompiler)
 app.setErrorHandler(errorHandler)
+app.register(fastifyWebsocket);
 
 
 // Auth
@@ -99,6 +102,8 @@ app.register(updateOrganization)
 app.register(getMembership)
 app.register(getSubscriptionByOrgSlug)
 
+// Websockets
+app.register(getMonitorUpdatesWs)
 
 
 // Monitoring

@@ -1,64 +1,83 @@
-import Redis, { Redis as RedisClient } from 'ioredis'
+import Redis from 'ioredis'
 import { env } from '@/env'
-import { IRedisService } from '@/services/interfaces/redis-service.interface'
-
+import type { IRedisService } from '@/services/interfaces/redis-service.interface'
 
 export class RedisService implements IRedisService {
-  private redis: RedisClient
+  private redis = new Redis(
+    `redis://${env.REDIS_USERNAME}:${env.REDIS_PASSWORD}@${env.REDIS_HOST}:${env.REDIS_PORT}`
+  )
 
-  constructor() {
-    const redisUrl = `redis://${env.REDIS_USERNAME}:${env.REDIS_PASSWORD}@${env.REDIS_HOST}:${env.REDIS_PORT}`
-    this.redis = new Redis(redisUrl)
-  }
+  private subscriber = new Redis(
+    `redis://${env.REDIS_USERNAME}:${env.REDIS_PASSWORD}@${env.REDIS_HOST}:${env.REDIS_PORT}`
+  ) // ✅ Cliente separado para `subscribe`
 
-  async set(key: string, value: string, expiration: number = 300): Promise<string> {
+  async set(key: string, value: string, expiration = 300) {
     try {
       return await this.redis.set(key, value, 'EX', expiration)
-    } catch (error: unknown) {
-      if (error instanceof Error) 
-        throw new Error(`Failed to set key ${key}: ${error.message}`)
-      throw new Error(`Failed to set key ${key}: Unknown error`)
+    } catch (error) {
+      throw new Error(`Failed to set key ${key}: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
-  async get(key: string): Promise<string | null> {
+  async get(key: string) {
     try {
       return await this.redis.get(key)
-    } catch (error: unknown) {
-      if (error instanceof Error) 
-        throw new Error(`Failed to get key ${key}: ${error.message}`)
-      throw new Error(`Failed to get key ${key}: Unknown error`)
+    } catch (error) {
+      throw new Error(`Failed to get key ${key}: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
-  async del(key: string): Promise<number> {
+  async del(key: string) {
     try {
       return await this.redis.del(key)
-    } catch (error: unknown) {
-      if (error instanceof Error) 
-        throw new Error(`Failed to delete key ${key}: ${error.message}`)
-      throw new Error(`Failed to delete key ${key}: Unknown error`)
+    } catch (error) {
+      throw new Error(`Failed to delete key ${key}: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
-  async exists(key: string): Promise<boolean> {
+  async exists(key: string) {
     try {
-      const result = await this.redis.exists(key)
-      return result === 1
-    } catch (error: unknown) {
-      if (error instanceof Error) 
-        throw new Error(`Failed to check if key exists ${key}: ${error.message}`)
-      throw new Error(`Failed to check if key exists ${key}: Unknown error`)
+      return (await this.redis.exists(key)) === 1
+    } catch (error) {
+      throw new Error(`Failed to check if key exists ${key}: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
-  async close(): Promise<void> {
+  async close() {
     try {
       await this.redis.quit()
-    } catch (error: unknown) {
-      if (error instanceof Error) 
-        throw new Error(`Failed to close Redis connection: ${error.message}`)
-      throw new Error(`Failed to close Redis connection: Unknown error`)
+      await this.subscriber.quit() // ✅ Fechar ambas conexões corretamente
+    } catch (error) {
+      throw new Error(`Failed to close Redis connection: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  // ✅ Método para listar todas as chaves correspondentes a um padrão
+  async keys(pattern: string): Promise<string[]> {
+    try {
+      return await this.redis.keys(pattern)
+    } catch (error) {
+      throw new Error(`Failed to get keys with pattern ${pattern}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  // ✅ Método para publicar eventos no Redis
+  async publish(channel: string, message: string): Promise<void> {
+    try {
+      await this.redis.publish(channel, message)
+    } catch (error) {
+      throw new Error(`Failed to publish message on ${channel}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  // ✅ Método para se inscrever em eventos do Redis
+  async subscribe(channel: string, callback: (message: string) => void): Promise<void> {
+    try {
+      await this.subscriber.subscribe(channel, (message) => {
+        return callback(message)
+      })
+    } catch (error) {
+      throw new Error(`Failed to subscribe to ${channel}: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 }
