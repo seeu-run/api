@@ -64,11 +64,18 @@ export class RedisService implements IRedisService {
   // ✅ Método para publicar eventos no Redis
   async publish(channel: string, message: string): Promise<void> {
     try {
-      await this.redis.publish(channel, message)
+        console.log(`📡 Tentando publicar no Redis: ${channel} ->`, message);
+        if (!message) {
+            console.warn("⚠️ Tentativa de publicar mensagem vazia no Redis!");
+            return;
+        }
+        await this.redis.publish(channel, message);
+        console.log(`✅ Publicado no Redis: ${channel} ->`, message);
     } catch (error) {
-      throw new Error(`Failed to publish message on ${channel}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        console.error(`❌ Erro ao publicar no Redis (${channel}):`, error);
     }
-  }
+}
+
 
   // ✅ Método para se inscrever em eventos do Redis
   async subscribe(channel: string, callback: (message: string) => void): Promise<void> {

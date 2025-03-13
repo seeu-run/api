@@ -91,9 +91,13 @@ export class VpsChecker {
             );
 
             // ✅ 🚀 Publica o evento no Redis para notificar WebSockets!
-            console.log(`📡 Tentando publicar no Redis: monitor:update -> ${data.monitorId}`);
-            await redisService.publish("monitor:update", data.monitorId);
-            console.log(`✅ Publicado no Redis: monitor:update -> ${data.monitorId}`);
+            if (!data.monitorId) {
+                console.warn("⚠️ monitorId está indefinido ao tentar publicar no Redis!");
+            } else {
+                console.log(`📡 Enviando atualização para monitor: ${data.monitorId}`);
+                await redisService.publish("monitor:update", data.monitorId);
+            }
+            
             
 
         } catch (e) {
