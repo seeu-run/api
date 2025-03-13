@@ -24,11 +24,21 @@ export async function getProfile(app: FastifyInstance) {
                 id: z.string().uuid(),
                 name: z.string().nullable(),
                 email: z.string().email(),
-                subscription: z.nativeEnum(SubscriptionType),
                 avatarUrl: z.string().url().nullable(),
+                owns_organizations: z.array(
+                  z.object({
+                    Subscription: z.array(
+                      z.object({
+                        plan: z.object({
+                          type: z.nativeEnum(SubscriptionType),
+                        }),
+                      })
+                    ),
+                  })
+                ),
               }),
             }),
-          },
+          }
         },
       },
 
@@ -36,9 +46,7 @@ export async function getProfile(app: FastifyInstance) {
         const userId = await request.getCurrentUserId()
 
         const user = await prisma.user.findUnique({
-            where: {
-              id: userId,
-            },
+            where: { id: userId },
             select: {
               id: true,
               name: true,
@@ -48,13 +56,9 @@ export async function getProfile(app: FastifyInstance) {
                 select: {
                   Subscription: {
                     select: {
-                      status: true,
-                      expiresAt: true,
-                      startedAt: true,
                       plan: {
                         select: {
                           type: true,
-                          name: true,
                         },
                       },
                     },
