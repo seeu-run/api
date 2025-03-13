@@ -1,6 +1,6 @@
-import {ConnectionOptions, Queue} from "bullmq";
+import {type ConnectionOptions, Queue} from "bullmq";
 import {redisConfig} from "@/utils/redisConfig";
-import {VpsMonitorDto} from "@/cron/usecases/vps-monitor";
+import type {VpsMonitorDto} from "@/cron/usecases/vps-monitor";
 
 export class QueueService {
     private vpsMonitoringQueue: Queue

@@ -1,5 +1,5 @@
-import { Client, ClientChannel, ConnectConfig, ExecOptions } from "ssh2"
-import { RedisService } from "@/services/redis-service"
+import { Client, type ClientChannel, type ConnectConfig, type ExecOptions } from "ssh2"
+import type { RedisService } from "@/services/redis-service"
 
 export class SshService {
     private static connections: Map<string, Client> = new Map() // Pool de conexões
