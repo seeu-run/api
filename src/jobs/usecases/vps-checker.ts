@@ -22,7 +22,7 @@ export class VpsChecker {
                             "memInfo": {
                                 "totalMemMb": '$(free -m | awk '/Mem:/ {print $2}')',
                                 "usedMemMb": '$(free -m | awk '/Mem:/ {print $3}')',
-                                "freeMemMb": '$(free -m | awk '/Mem:/ {print $7}')',  # Corrigido para "available"
+                                "freeMemMb": '$(free -m | awk '/Mem:/ {print $7}')',
                                 "usedMemPercentage": '$(free -m | awk '/Mem:/ {printf "%.2f", ($2-$7)/$2 * 100}')',
                                 "freeMemPercentage": '$(free -m | awk '/Mem:/ {printf "%.2f", $7/$2 * 100}')'
                             },
