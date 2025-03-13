@@ -17,15 +17,24 @@ export async function getMonitorUpdatesWs(app: FastifyInstance) {
 
       const redisService = new RedisService();
 
+      // ✅ Função para verificar se o WebSocket está pronto
+      const isSocketReady = () =>
+        connection.socket && connection.socket.readyState === 1;
+
       // ✅ Função para enviar atualizações ao cliente WebSocket
       const sendUpdate = async () => {
-        if (!connection.socket || connection.socket.readyState !== 1) {
+        if (!isSocketReady()) {
           console.warn("⚠️ WebSocket não está pronto para receber mensagens.");
           return;
         }
 
         try {
           const monitorKeys = await redisService.keys("vps-monitor:*");
+
+          if (!monitorKeys.length) {
+            console.warn("⚠️ Nenhum monitor encontrado no Redis.");
+            return;
+          }
 
           const monitorData = await Promise.all(
             monitorKeys.map(async (key) => {
@@ -44,9 +53,14 @@ export async function getMonitorUpdatesWs(app: FastifyInstance) {
 
       // ✅ O WebSocket agora escuta eventos do Redis
       redisService.subscribe("monitor:update", async (monitorId) => {
+        if (!monitorId) {
+          console.warn("⚠️ Evento recebido sem um monitorId válido.");
+          return;
+        }
+
         console.log(`🔄 Atualização recebida para monitor ${monitorId}`);
 
-        if (!connection.socket || connection.socket.readyState !== 1) {
+        if (!isSocketReady()) {
           console.warn("⚠️ WebSocket fechado antes de enviar atualização.");
           return;
         }
