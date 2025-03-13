@@ -42,7 +42,6 @@ import { getInvites } from './routes/invites/get-invites'
 import { getPendingInvites } from './routes/invites/get-pending-invites'
 import { rejectInvite } from './routes/invites/reject-invite'
 import { revokeInvite } from './routes/invites/revoke-invite'
-import { mockTestRoute } from './routes/mock/mock-route'
 
 export const app = fastify().withTypeProvider<ZodTypeProvider>()
 
@@ -106,8 +105,6 @@ app.register(getMonitoring)
 app.register(getMonitors)
 app.register(updateMonitoring)
 
-
-app.register(mockTestRoute)
 
 // Invites
 app.register(acceptInvite)
