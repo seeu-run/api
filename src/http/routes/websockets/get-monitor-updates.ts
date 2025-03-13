@@ -18,9 +18,18 @@ export async function getMonitorUpdatesWs(app: FastifyInstance) {
       const redisService = new RedisService();
 
       // ✅ Função para verificar se o WebSocket está pronto
-      const isSocketReady = () =>
-        connection.socket && connection.socket.readyState === 1;
-
+      const isSocketReady = () => {
+        if (!connection.socket) {
+          console.warn("⚠️ WebSocket está indefinido.");
+          return false;
+        }
+        if (connection.socket.readyState !== 1) {
+          console.warn(`⚠️ WebSocket não está pronto (Estado: ${connection.socket.readyState}).`);
+          return false;
+        }
+        return true;
+      };
+      
       // ✅ Função para enviar atualizações ao cliente WebSocket
       const sendUpdate = async () => {
         let attempts = 0;
@@ -66,31 +75,33 @@ export async function getMonitorUpdatesWs(app: FastifyInstance) {
 
       // ✅ O WebSocket agora escuta eventos do Redis
       redisService.subscribe("monitor:update", async (monitorId) => {
-        if (!monitorId || typeof monitorId !== "string") {
-          console.warn("⚠️ Evento do Redis recebido sem um monitorId válido:", monitorId);
-          return;
+        console.log("🔄 Evento recebido do Redis: monitor:update ->", monitorId);
+    
+        if (!monitorId) {
+            console.warn("⚠️ Evento do Redis recebido sem um monitorId válido!");
+            return;
         }
-      
-        console.log(`🔄 Atualização recebida para monitor ${monitorId}`);
-      
-        if (!isSocketReady()) {
-          console.warn("⚠️ WebSocket fechado antes de enviar atualização.");
-          return;
+    
+        if (!connection.socket || connection.socket.readyState !== 1) {
+            console.warn("⚠️ WebSocket fechado antes de enviar atualização.");
+            return;
         }
-      
+    
         try {
-          const cacheKey = `vps-monitor:${monitorId}`;
-          const monitorData = await redisService.get(cacheKey);
-      
-          if (monitorData) {
-            connection.socket.send(monitorData);
-          } else {
-            console.warn(`⚠️ Nenhum dado encontrado no Redis para ${monitorId}`);
-          }
+            const cacheKey = `vps-monitor:${monitorId}`;
+            const monitorData = await redisService.get(cacheKey);
+    
+            if (monitorData) {
+                console.log("📡 Enviando atualização para WebSocket:", monitorData);
+                connection.socket.send(monitorData);
+            } else {
+                console.warn(`⚠️ Nenhum dado encontrado no Redis para ${monitorId}`);
+            }
         } catch (error) {
-          console.error("❌ Erro ao enviar atualização pelo WebSocket:", error);
+            console.error("❌ Erro ao enviar atualização pelo WebSocket:", error);
         }
-      });
+    });
+    
       
 
       connection.socket.on("close", () => {

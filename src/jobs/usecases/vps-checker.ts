@@ -91,8 +91,10 @@ export class VpsChecker {
             );
 
             // ✅ 🚀 Publica o evento no Redis para notificar WebSockets!
+            console.log(`📡 Tentando publicar no Redis: monitor:update -> ${data.monitorId}`);
             await redisService.publish("monitor:update", data.monitorId);
-            console.log(`📡 Publicado no Redis: monitor:update -> ${data.monitorId}`);
+            console.log(`✅ Publicado no Redis: monitor:update -> ${data.monitorId}`);
+            
 
         } catch (e) {
             console.error(`❌ SSH execution failed for ${data.monitorId}:`, e);
