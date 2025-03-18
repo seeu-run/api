@@ -81,7 +81,9 @@ export class RedisService implements IRedisService {
   async subscribe(channel: string, callback: (message: string) => void): Promise<void> {
     try {
       await this.subscriber.subscribe(channel, (message) => {
-        return callback(message)
+        if (message == null) return
+
+        return callback(message.name)
       })
     } catch (error) {
       throw new Error(`Failed to subscribe to ${channel}: ${error instanceof Error ? error.message : 'Unknown error'}`)
