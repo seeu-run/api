@@ -1,3 +1,4 @@
+// @ts-ignore
 import { AuthService } from "@/services/auth.service";
 import { FastifyInstance } from "fastify";
 

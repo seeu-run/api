@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import type { ConnectConfig } from "ssh2";
 import { getVpsMonitors } from "@/cron/monitors/get-monitors";
 import type { QueueService } from "@/services/queue-service";
+import {CryptService} from "@/services/crypt-service";
 
 export interface VpsMonitorDto {
     monitorId: string;
@@ -10,9 +11,11 @@ export interface VpsMonitorDto {
 
 export class VpsMonitor {
     private readonly queueService: QueueService;
+    private readonly cryptService: CryptService;
 
-    constructor(queueService: QueueService) {
+    constructor(queueService: QueueService, cryptService: CryptService) {
         this.queueService = queueService;
+        this.cryptService = cryptService
     }
 
     async execute() {
@@ -25,13 +28,16 @@ export class VpsMonitor {
         console.log(`🔍 Encontrados ${monitors.length} monitores para verificar.`);
 
         for (const monitor of monitors) {
+            const sshPassword = this.cryptService.decrypt(monitor.sshPassword ?? '')
+            const ipAddress = this.cryptService.decrypt(monitor.ipAddress ?? '')
+
             const dto: VpsMonitorDto = {
                 monitorId: monitor.id,
                 vpsCredentials: {
-                    host: monitor.ipAddress ?? "",
+                    host: ipAddress,
                     port: 22,
                     username: monitor.sshUser ?? "",
-                    password: monitor.sshPassword ?? "",
+                    password: sshPassword,
                 },
             };
 

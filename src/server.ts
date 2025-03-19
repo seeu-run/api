@@ -1,15 +1,15 @@
-import { app } from '@/http/app';
-import { env } from '@/env';
-import { startJobs } from "@/jobs";
-import "@/cron";
+import { app } from '@/http/app'
+import { env } from '@/env'
+import { startJobs } from "@/jobs"
+import "@/cron"
 
 startJobs()
 
 app.listen({ port: env.PORT, host: '0.0.0.0' }).then(() => {
     const baseHost =
-        env.NODE_ENV === 'dev' ? `http://localhost:${env.PORT}` : `${env.HOST}`;
+        env.NODE_ENV === 'dev' ? `http://localhost:${env.PORT}` : `${env.HOST}`
 
-    console.log('🚀 HTTP Server is Running:');
-    console.log(`- API: ${baseHost}/`);
-    console.log(`- Swagger: ${baseHost}/docs`);
-});
+    console.log('🚀 HTTP Server is Running:')
+    console.log(`- API: ${baseHost}/`)
+    console.log(`- Swagger: ${baseHost}/docs`)
+})

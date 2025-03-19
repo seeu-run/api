@@ -7,6 +7,8 @@ import { prisma } from '@/lib/prisma'
 
 import { ServiceType } from '@prisma/client'
 import { ensureIsAdminOrOwner } from '@/utils/permissions'
+import { hash } from 'bcryptjs'
+import {CryptService} from "@/services/crypt-service";
 
 export async function createMonitoring(app: FastifyInstance) {
   app
@@ -44,17 +46,21 @@ export async function createMonitoring(app: FastifyInstance) {
         const { organization } = await request.getUserMembership(slug)
         await ensureIsAdminOrOwner(userId, organization.id)
 
-        const {name, type, url, ipAddress, sshKey, sshPassword, sshUser} = request.body
+        const {name, type, url, ipAddress, sshKey, sshPassword, sshUser} = request.body;
 
+        const cryptService = new CryptService();
+
+        const ipHash = cryptService.encript(ipAddress ?? '')
+        const sshPwdHash = cryptService.encript(sshPassword ?? '')
 
         const monitor = await prisma.serviceMonitor.create({
             data: {
                 name,
                 type,
                 url,
-                ipAddress,
+                ipAddress: ipHash,
                 sshKey,
-                sshPassword,
+                sshPassword: sshPwdHash,
                 sshUser,
                 organizationId: organization.id
             }

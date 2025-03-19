@@ -1,8 +1,8 @@
-import type { SshService } from "@/services/ssh-service";
-import type { VpsMonitorDto } from "@/cron/usecases/vps-monitor";
-import type { ServiceStatus } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
-import { RedisService } from "@/services/redis-service";
+import type {SshService} from "@/services/ssh-service";
+import type {VpsMonitorDto} from "@/cron/usecases/vps-monitor";
+import type {ServiceStatus} from "@prisma/client";
+import {prisma} from "@/lib/prisma";
+import {RedisService} from "@/services/redis-service";
 
 const redisService = new RedisService();
 
@@ -15,8 +15,8 @@ export class VpsChecker {
 
     async execute(data: VpsMonitorDto) {
         const monitor = await prisma.serviceMonitor.findUnique({
-            where: { id: data.monitorId },
-            include: { statuses: true },
+            where: {id: data.monitorId},
+            include: {statuses: true},
         });
 
         if (!monitor) {
@@ -68,7 +68,8 @@ export class VpsChecker {
                                     "networkUsage": {
                                         "downloadKb": "'$(cat /sys/class/net/eth0/statistics/rx_bytes)'",
                                         "uploadKb": "'$(cat /sys/class/net/eth0/statistics/tx_bytes)'"
-                                    }
+                                    },
+                                    "hostName": "'$(whois 46.202.150.216 | grep -i "netname" | awk -F': ' '{print $2}' | sed 's/^[ \\t]*//;s/[ \\t]*$//')'"
                                 }
                             }
                         }
@@ -78,14 +79,13 @@ export class VpsChecker {
 
             await this.sshService.execute(command, data.monitorId, data.vpsCredentials);
 
-            // ✅ Atualiza o cache com os novos dados para evitar execuções repetidas
             await redisService.set(cacheKey, JSON.stringify(data), 300); // Expira em 5 minutos
 
             await Promise.all(
                 monitor.statuses.map(async (status: ServiceStatus) => {
                     await prisma.serviceStatus.update({
-                        where: { id: status.id },
-                        data: { status: "UP" },
+                        where: {id: status.id},
+                        data: {status: "UP"},
                     });
                 })
             );
@@ -97,16 +97,14 @@ export class VpsChecker {
                 console.log(`📡 Enviando atualização para monitor: ${data.monitorId}`);
                 await redisService.publish("monitor:update", data.monitorId);
             }
-            
-            
 
         } catch (e) {
             console.error(`❌ SSH execution failed for ${data.monitorId}:`, e);
             await Promise.all(
                 monitor.statuses.map(async (status: ServiceStatus) => {
                     await prisma.serviceStatus.update({
-                        where: { id: status.id },
-                        data: { status: "DOWN" },
+                        where: {id: status.id},
+                        data: {status: "DOWN"},
                     });
                 })
             );
